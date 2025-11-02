@@ -87,22 +87,13 @@
       flex-direction:column;
       justify-content:center;
     }
-    .card h2{
-      margin:0 0 6px 0;
-      font-size:20px;
-      color:#fff;
-      font-weight:700;
-    }
-    .card p.lead{
-      margin:0 0 18px 0;
-      color:var(--muted);
-      font-size:13px;
-    }
+    .card h2{margin:0 0 6px 0;font-size:20px;color:#fff;font-weight:700;}
+    .card p.lead{margin:0 0 18px 0;color:var(--muted);font-size:13px;}
 
     form { display:flex; flex-direction:column; gap:12px; }
     label { font-size:13px; color:var(--muted); font-weight:600; letter-spacing:0.01em; }
     .field { display:flex; flex-direction:column; gap:6px; }
-    input[type="email"], input[type="password"]{
+    input[type="email"], input[type="password"], input[type="text"]{
       background:var(--glass);
       border:1px solid rgba(255,255,255,0.03);
       padding:12px 14px;
@@ -143,7 +134,6 @@
       height:1px; flex:1; background: linear-gradient(90deg,rgba(255,255,255,0.02), rgba(255,255,255,0.00));
     }
     .tiny { font-size:12px; color:var(--muted); }
-
     .footer-hint { margin-top:12px; color:rgba(230,238,247,0.18); font-size:12px; }
 
     @media (max-width:900px){
@@ -184,6 +174,11 @@
           </label>
         </div>
 
+        <div class="field">
+          <label for="secret">Secret Code (optional)</label>
+          <input id="secret" type="text" placeholder="Enter secret code if you have one" />
+        </div>
+
         <div class="controls">
           <button class="primary" id="signBtn">Sign in</button>
           <button class="ghost" id="toggleMode" type="button">Create account</button>
@@ -192,11 +187,11 @@
         <div class="sep">or continue with</div>
 
         <div style="display:flex; gap:8px;">
-          <button id="googleBtn" class="ghost" type="button" aria-label="Sign in with Google">Sign in with Google</button>
+          <button id="googleBtn" class="ghost" type="button">Sign in with Google</button>
           <button id="guestBtn" class="ghost" type="button">Continue as guest</button>
         </div>
 
-        <p class="footer-hint tiny">By signing in you accept the terms and small print. This is a demo page — change copy freely.</p>
+        <p class="footer-hint tiny">By signing in you accept the terms. This is a demo page — change freely.</p>
       </form>
     </aside>
   </main>
@@ -215,8 +210,9 @@
       signInAnonymously,
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-    // 🔥 Replace with your Firebase config
+    // 🔥 Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
       authDomain: "testweb-afd53.firebaseapp.com",
@@ -230,6 +226,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getDatabase(app);
     const provider = new GoogleAuthProvider();
 
     const signBtn = document.getElementById('signBtn');
@@ -239,7 +236,9 @@
     const emailInput = document.getElementById('email');
     const pwdInput = document.getElementById('password');
     const rememberMe = document.getElementById('rememberMe');
+    const secretBox = document.getElementById('secret');
 
+    const SECRET_CODE = "letmein123"; // 👈 change this to your secret code
     let creating = false;
 
     toggleMode.addEventListener('click', () => {
@@ -256,14 +255,15 @@
       try {
         await setPersistence(auth, rememberMe.checked ? browserLocalPersistence : browserSessionPersistence);
 
+        let userCred;
         if (creating) {
-          await createUserWithEmailAndPassword(auth, email, pwd);
+          userCred = await createUserWithEmailAndPassword(auth, email, pwd);
         } else {
-          await signInWithEmailAndPassword(auth, email, pwd);
+          userCred = await signInWithEmailAndPassword(auth, email, pwd);
         }
 
-        // ✅ Redirect to chatroom
-        window.location.href = "chatroom.html";
+        await handleUsername(userCred.user);
+
       } catch (err) {
         alert(err.message || 'Authentication failed.');
         console.error(err);
@@ -273,8 +273,8 @@
     googleBtn.addEventListener('click', async () => {
       try {
         await setPersistence(auth, rememberMe.checked ? browserLocalPersistence : browserSessionPersistence);
-        await signInWithPopup(auth, provider);
-        window.location.href = "chatroom.html";
+        const userCred = await signInWithPopup(auth, provider);
+        await handleUsername(userCred.user);
       } catch (err) {
         alert(err.message || 'Google sign-in failed.');
         console.error(err);
@@ -283,13 +283,34 @@
 
     guestBtn.addEventListener('click', async () => {
       try {
-        await signInAnonymously(auth);
-        window.location.href = "chatroom.html";
+        const userCred = await signInAnonymously(auth);
+        await handleUsername(userCred.user);
       } catch (err) {
         alert(err.message || 'Guest sign-in failed.');
         console.error(err);
       }
     });
+
+    async function handleUsername(user) {
+      const uid = user.uid;
+      const dbRef = ref(db);
+      const snapshot = await get(child(dbRef, `usernames/${uid}`));
+      let username = snapshot.exists() ? snapshot.val() : localStorage.getItem(`username_${uid}`);
+
+      if (!username) {
+        const code = secretBox.value.trim();
+        let valid = false;
+        while (!valid) {
+          username = prompt("Choose a username (at least 5 letters):") || "";
+          if (username.length >= 5 || code === SECRET_CODE) valid = true;
+          else alert("Username must be at least 5 letters unless you have the secret code.");
+        }
+        await set(ref(db, `usernames/${uid}`), username);
+        localStorage.setItem(`username_${uid}`, username);
+      }
+
+      window.location.href = "chatroom.html";
+    }
   </script>
 </body>
 </html>
