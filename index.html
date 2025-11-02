@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Text Chat</title>
+  <title>Online Chatroom 💬</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -27,16 +27,15 @@
       margin-top: 20px;
     }
     .message {
-      background: #2a2a2a;
       padding: 8px 12px;
       border-radius: 10px;
       margin-bottom: 10px;
       word-wrap: break-word;
+      background: #2a2a2a;
     }
-    .message.self {
-      background: #0078ff;
-      align-self: flex-end;
-      color: white;
+    .message .name {
+      font-weight: bold;
+      color: #00bfff;
     }
     .input-area {
       display: flex;
@@ -65,47 +64,64 @@
   </style>
 </head>
 <body>
+  <h2>Online Chatroom 💬</h2>
 
-  <h2>Simple Chat 💬</h2>
   <div class="chat-box" id="chatBox"></div>
+
   <div class="input-area">
     <input type="text" id="msgInput" placeholder="Type a message..." />
     <button onclick="sendMessage()">Send</button>
   </div>
 
-  <script>
-    const chatBox = document.getElementById('chatBox');
-    const msgInput = document.getElementById('msgInput');
+  <!-- Firebase -->
+  <script type="module">
+    // Import Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-    // Load previous messages
-    const messages = JSON.parse(localStorage.getItem('messages')) || [];
+    // 🔥 Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_APP.firebaseapp.com",
+      databaseURL: "https://YOUR_APP.firebaseio.com",
+      projectId: "YOUR_APP",
+      storageBucket: "YOUR_APP.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
 
-    function displayMessages() {
-      chatBox.innerHTML = '';
-      messages.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'message';
-        div.textContent = msg;
-        chatBox.appendChild(div);
-      });
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const chatRef = ref(db, "messages");
+
+    const chatBox = document.getElementById("chatBox");
+    const msgInput = document.getElementById("msgInput");
+
+    let username = prompt("Enter your name:") || "Anonymous";
+
+    // Listen for new messages
+    onChildAdded(chatRef, (data) => {
+      const msg = data.val();
+      const div = document.createElement("div");
+      div.className = "message";
+      div.innerHTML = `<span class="name">${msg.name}:</span> ${msg.text}`;
+      chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function sendMessage() {
-      const text = msgInput.value.trim();
-      if (text) {
-        messages.push(text);
-        localStorage.setItem('messages', JSON.stringify(messages));
-        displayMessages();
-        msgInput.value = '';
-      }
-    }
-
-    msgInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') sendMessage();
     });
 
-    displayMessages();
+    // Send a message
+    window.sendMessage = function() {
+      const text = msgInput.value.trim();
+      if (text) {
+        push(chatRef, { name: username, text });
+        msgInput.value = "";
+      }
+    };
+
+    msgInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") sendMessage();
+    });
   </script>
 </body>
 </html>
