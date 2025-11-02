@@ -1,206 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatroom with Images 💬🖼️</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h2 { margin-top: 15px; }
-    .chat-box {
-      flex: 1;
-      width: 90%;
-      max-width: 500px;
-      border: 2px solid #333;
-      border-radius: 10px;
-      padding: 10px;
-      overflow-y: auto;
-      background: #1e1e1e;
-      margin-top: 10px;
-    }
-    .message {
-      background: #2a2a2a;
-      padding: 8px 12px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      word-wrap: break-word;
-    }
-    .message img {
-      max-width: 100%;
-      border-radius: 10px;
-      margin-top: 5px;
-    }
-    .message .name {
-      font-weight: bold;
-      color: #00bfff;
-    }
-    .input-area {
-      display: flex;
-      width: 90%;
-      max-width: 500px;
-      margin: 10px 0;
-      gap: 5px;
-    }
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-    }
-    button {
-      background: #0078ff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 15px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #005fcc;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Chatroom 💬</title>
+<style>
+body{font-family:Arial,sans-serif;background:#121212;color:white;display:flex;flex-direction:column;align-items:center;height:100vh;margin:0;}
+.chat-box{flex:1;width:90%;max-width:500px;border:2px solid #333;border-radius:10px;padding:10px;overflow-y:auto;background:#1e1e1e;margin-top:10px;}
+.message{background:#2a2a2a;padding:8px 12px;border-radius:10px;margin-bottom:10px;}
+.name{color:#00bfff;font-weight:bold;}
+.input-area{display:flex;width:90%;max-width:500px;margin:10px 0;gap:5px;}
+input[type=text]{flex:1;padding:10px;border:none;border-radius:8px;}
+button{background:#0078ff;color:white;border:none;border-radius:8px;padding:10px 15px;cursor:pointer;}
+button:hover{background:#005fcc;}
+</style>
 </head>
 <body>
-  <h2>Chatroom with Images 💬🖼️</h2>
-  <div class="chat-box" id="chatBox"></div>
+<h2>Chatroom 💬</h2>
+<div class="chat-box" id="chatBox"></div>
+<div class="input-area">
+  <input type="text" id="msgInput" placeholder="Type a message...">
+  <input type="file" id="imgInput" accept="image/*">
+  <button id="sendBtn">Send</button>
+</div>
 
-  <div class="input-area">
-    <input type="text" id="msgInput" placeholder="Type a message..." />
-    <input type="file" id="imgInput" accept="image/*" />
-    <button id="sendBtn">Send</button>
-  </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getDatabase, ref, onChildAdded, get, child, push } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { 
-      getAuth, 
-      onAuthStateChanged, 
-      signOut 
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { 
-      getDatabase, 
-      ref, 
-      push, 
-      onChildAdded, 
-      get, 
-      child 
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-    import { 
-      getStorage, 
-      ref as sRef, 
-      uploadBytes, 
-      getDownloadURL 
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+const firebaseConfig = {
+  apiKey:"AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
+  authDomain:"testweb-afd53.firebaseapp.com",
+  databaseURL:"https://testweb-afd53-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"testweb-afd53",
+  storageBucket:"testweb-afd53.appspot.com",
+  messagingSenderId:"256254284539",
+  appId:"1:256254284539:web:2e3543191c27a36441165e"
+};
 
-    // 🔥 Your Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
-      authDomain: "testweb-afd53.firebaseapp.com",
-      databaseURL: "https://testweb-afd53-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "testweb-afd53",
-      storageBucket: "testweb-afd53.appspot.com",
-      messagingSenderId: "256254284539",
-      appId: "1:256254284539:web:2e3543191c27a36441165e",
-      measurementId: "G-G474LLKB0T"
-    };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const storage = getStorage(app);
+const chatRef = ref(db, "messages");
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const storage = getStorage(app);
-    const chatRef = ref(db, "messages");
+const chatBox = document.getElementById("chatBox");
+const msgInput = document.getElementById("msgInput");
+const imgInput = document.getElementById("imgInput");
+const sendBtn = document.getElementById("sendBtn");
 
-    const chatBox = document.getElementById("chatBox");
-    const msgInput = document.getElementById("msgInput");
-    const imgInput = document.getElementById("imgInput");
-    const sendBtn = document.getElementById("sendBtn");
+let username = "Anonymous", uid = null;
 
-    let username = "Anonymous";
-    let uid = null;
-
-    // Wait for user auth
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        alert("You're not signed in. Redirecting...");
-        window.location.href = "index.html";
-        return;
-      }
-
-      uid = user.uid;
-
-      // 🔹 Try to get username from localStorage first
-      const localUsername = localStorage.getItem(`username_${uid}`);
-      if (localUsername) {
-        username = localUsername;
-      } else {
-        // 🔹 Otherwise, fetch from Firebase
-        const dbRef = ref(db);
-        const snapshot = await get(child(dbRef, `usernames/${uid}`));
-        if (snapshot.exists()) {
-          username = snapshot.val();
-          localStorage.setItem(`username_${uid}`, username);
-        } else {
-          username = "Anonymous";
-        }
-      }
-
-      console.log("Logged in as:", username);
-    });
-
-    // Display new messages
-    onChildAdded(chatRef, (data) => {
-      const msg = data.val();
-      const div = document.createElement("div");
-      div.className = "message";
-      div.innerHTML = `<span class="name">${msg.name}:</span> ${msg.text || ""}`;
-      if (msg.imageURL) {
-        const img = document.createElement("img");
-        img.src = msg.imageURL;
-        div.appendChild(img);
-      }
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    // Send text or image
-    async function sendMessage() {
-      const text = msgInput.value.trim();
-      const file = imgInput.files[0];
-      if (!text && !file) return;
-
-      let imageURL = null;
-      if (file) {
-        const storageRef = sRef(storage, "images/" + Date.now() + "-" + file.name);
-        await uploadBytes(storageRef, file);
-        imageURL = await getDownloadURL(storageRef);
-      }
-
-      push(chatRef, {
-        name: username,
-        text: text || "",
-        imageURL: imageURL || null
-      });
-
-      msgInput.value = "";
-      imgInput.value = "";
+onAuthStateChanged(auth, async user => {
+  if (!user) return (window.location.href = "index.html");
+  uid = user.uid;
+  const local = localStorage.getItem(`username_${uid}`);
+  if (local) username = local;
+  else {
+    const snap = await get(child(ref(db), `usernames/${uid}`));
+    if (snap.exists()) {
+      username = snap.val();
+      localStorage.setItem(`username_${uid}`, username);
     }
+  }
+  console.log("Chatting as:", username);
+});
 
-    sendBtn.addEventListener("click", sendMessage);
-    msgInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") sendMessage();
-    });
-  </script>
+onChildAdded(chatRef, snap => {
+  const m = snap.val();
+  const div = document.createElement("div");
+  div.className = "message";
+  div.innerHTML = `<span class='name'>${m.name}:</span> ${m.text || ""}`;
+  if (m.imageURL) {
+    const img = document.createElement("img");
+    img.src = m.imageURL;
+    img.style.maxWidth = "100%";
+    div.appendChild(img);
+  }
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  const file = imgInput.files[0];
+  if (!text && !file) return;
+  let imageURL = null;
+  if (file) {
+    const storageRef = sRef(storage, "images/" + Date.now() + "-" + file.name);
+    await uploadBytes(storageRef, file);
+    imageURL = await getDownloadURL(storageRef);
+  }
+  await push(chatRef, { name: username, text: text, imageURL });
+  msgInput.value = "";
+  imgInput.value = "";
+}
+
+sendBtn.onclick = sendMessage;
+msgInput.addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
+</script>
 </body>
 </html>
