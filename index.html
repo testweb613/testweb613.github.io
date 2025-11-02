@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Online Chatroom 💬</title>
+  <title>Chatroom with Images 💬🖼️</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,6 +15,9 @@
       height: 100vh;
       margin: 0;
     }
+    h2 {
+      margin-top: 15px;
+    }
     .chat-box {
       flex: 1;
       width: 90%;
@@ -24,14 +27,19 @@
       padding: 10px;
       overflow-y: auto;
       background: #1e1e1e;
-      margin-top: 20px;
+      margin-top: 10px;
     }
     .message {
+      background: #2a2a2a;
       padding: 8px 12px;
       border-radius: 10px;
       margin-bottom: 10px;
       word-wrap: break-word;
-      background: #2a2a2a;
+    }
+    .message img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 5px;
     }
     .message .name {
       font-weight: bold;
@@ -42,11 +50,12 @@
       width: 90%;
       max-width: 500px;
       margin: 10px 0;
+      gap: 5px;
     }
-    input {
+    input[type="text"] {
       flex: 1;
       padding: 10px;
-      border-radius: 8px 0 0 8px;
+      border-radius: 8px;
       border: none;
       outline: none;
     }
@@ -54,7 +63,7 @@
       background: #0078ff;
       color: white;
       border: none;
-      border-radius: 0 8px 8px 0;
+      border-radius: 8px;
       padding: 10px 15px;
       cursor: pointer;
     }
@@ -64,24 +73,24 @@
   </style>
 </head>
 <body>
-  <h2>Online Chatroom 💬</h2>
-
+  <h2>Chatroom with Images 💬🖼️</h2>
   <div class="chat-box" id="chatBox"></div>
 
   <div class="input-area">
     <input type="text" id="msgInput" placeholder="Type a message..." />
+    <input type="file" id="imgInput" accept="image/*" />
     <button onclick="sendMessage()">Send</button>
   </div>
 
   <!-- Firebase -->
   <script type="module">
-    // Import Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     // 🔥 Your Firebase configuration
     const firebaseConfig = {
-       apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
+      apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
   authDomain: "testweb-afd53.firebaseapp.com",
   databaseURL: "https://testweb-afd53-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "testweb-afd53",
@@ -94,31 +103,56 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const storage = getStorage(app);
     const chatRef = ref(db, "messages");
 
     const chatBox = document.getElementById("chatBox");
     const msgInput = document.getElementById("msgInput");
+    const imgInput = document.getElementById("imgInput");
 
     let username = prompt("Enter your name:") || "Anonymous";
 
-    // Listen for new messages
+    // Display new messages
     onChildAdded(chatRef, (data) => {
       const msg = data.val();
       const div = document.createElement("div");
       div.className = "message";
-      div.innerHTML = `<span class="name">${msg.name}:</span> ${msg.text}`;
+      div.innerHTML = `<span class="name">${msg.name}:</span> ${msg.text || ""}`;
+      if (msg.imageURL) {
+        const img = document.createElement("img");
+        img.src = msg.imageURL;
+        div.appendChild(img);
+      }
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    // Send a message
-    window.sendMessage = function() {
+    // Send text or image
+    async function sendMessage() {
       const text = msgInput.value.trim();
-      if (text) {
-        push(chatRef, { name: username, text });
-        msgInput.value = "";
+      const file = imgInput.files[0];
+
+      if (!text && !file) return;
+
+      let imageURL = null;
+
+      // Upload image if present
+      if (file) {
+        const storageRef = sRef(storage, "images/" + Date.now() + "-" + file.name);
+        await uploadBytes(storageRef, file);
+        imageURL = await getDownloadURL(storageRef);
       }
-    };
+
+      // Push message to Firebase
+      push(chatRef, {
+        name: username,
+        text: text || "",
+        imageURL: imageURL || null
+      });
+
+      msgInput.value = "";
+      imgInput.value = "";
+    }
 
     msgInput.addEventListener("keydown", e => {
       if (e.key === "Enter") sendMessage();
