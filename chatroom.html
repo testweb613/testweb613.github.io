@@ -32,6 +32,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
 }
 .profile img {
   width: 40px;
@@ -40,10 +41,7 @@ body {
   object-fit: cover;
   border: 2px solid #00bfff;
 }
-.profile span {
-  font-weight: bold;
-  cursor: pointer;
-}
+.profile span { font-weight: bold; }
 .logout-btn {
   background: #444;
   color: white;
@@ -81,17 +79,10 @@ h2 { margin-top: 70px; }
   border-radius: 50%;
   object-fit: cover;
 }
-.name {
-  color: #00bfff;
-  font-weight: bold;
-  display: block;
-}
+.name { color: #00bfff; font-weight: bold; display: block; }
 .msg-content { flex: 1; }
-.msg-content img {
-  max-width: 100%;
-  border-radius: 8px;
-  margin-top: 5px;
-}
+.msg-content img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+
 .input-area {
   display: flex;
   width: 90%;
@@ -124,8 +115,9 @@ button:hover { background: #005fcc; }
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  z-index: 20;
 }
-#editPanel input { margin: 5px 0; padding: 8px; border-radius: 6px; border: none; }
+#editPanel input { margin: 5px 0; padding: 8px; border-radius: 6px; border: none; width: 200px; }
 </style>
 </head>
 <body>
@@ -155,7 +147,7 @@ button:hover { background: #005fcc; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, onChildAdded, get, child, push, set, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onChildAdded, get, child, push, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -190,59 +182,63 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 let username = "Anonymous", uid = null, profileURL = "https://via.placeholder.com/40";
 
-// Listen for auth
+// Auth listener
 onAuthStateChanged(auth, async user => {
-  if (!user) return (window.location.href = "index.html");
+  if (!user) return window.location.href = "index.html";
   uid = user.uid;
-  const localName = localStorage.getItem(`username_${uid}`);
-  const localPic = localStorage.getItem(`profilepic_${uid}`);
-  if (localName) username = localName;
-  if (localPic) profileURL = localPic;
 
-  // Try to fetch from DB
+  // Load profile from DB
   const snap = await get(child(ref(db), `profiles/${uid}`));
   if (snap.exists()) {
     const data = snap.val();
-    if (data.username) username = data.username;
-    if (data.photoURL) profileURL = data.photoURL;
-    localStorage.setItem(`username_${uid}`, username);
-    localStorage.setItem(`profilepic_${uid}`, profileURL);
+    username = data.username || username;
+    profileURL = data.photoURL || profileURL;
   } else {
-    await set(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
+    await update(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
   }
+
+  localStorage.setItem(`username_${uid}`, username);
+  localStorage.setItem(`profilepic_${uid}`, profileURL);
 
   usernameDisplay.textContent = username;
   profilePic.src = profileURL;
-  console.log("Logged in as:", username);
 });
 
+// Toggle edit panel
 profileBox.onclick = () => {
   editPanel.style.display = editPanel.style.display === "block" ? "none" : "block";
 };
 
+// Save profile changes
 saveProfile.onclick = async () => {
   const newName = newUsername.value.trim();
-  const newFile = newProfilePic.files[0];
-  if (newName && newName.length < 5) return alert("Username must be at least 5 letters.");
-  let newPhotoURL = profileURL;
+  if (newName && newName.length < 5) return alert("Username must be 5+ letters.");
 
-  if (newFile) {
+  let newPhotoURL = profileURL;
+  const file = newProfilePic.files[0];
+  if (file) {
     const storageRef = sRef(storage, `pfps/${uid}-${Date.now()}`);
-    await uploadBytes(storageRef, newFile);
+    await uploadBytes(storageRef, file);
     newPhotoURL = await getDownloadURL(storageRef);
   }
+
   if (newName) username = newName;
   profileURL = newPhotoURL;
 
   await update(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
   localStorage.setItem(`username_${uid}`, username);
   localStorage.setItem(`profilepic_${uid}`, profileURL);
+
   usernameDisplay.textContent = username;
   profilePic.src = profileURL;
+
   editPanel.style.display = "none";
+  newUsername.value = "";
+  newProfilePic.value = "";
   alert("Profile updated!");
 };
 
+// Logout
 logoutBtn.onclick = () => signOut(auth).then(()=>window.location.href="index.html");
 
 // Display messages
@@ -251,21 +247,11 @@ onChildAdded(chatRef, async snap => {
   const div = document.createElement("div");
   div.className = "message";
 
-  // Fetch sender profile (cached for speed)
-  let senderPfp = localStorage.getItem(`profilepic_${msg.uid}`) || "https://via.placeholder.com/35";
   let senderName = localStorage.getItem(`username_${msg.uid}`) || msg.name;
-  if (!senderName || senderName === "Anonymous") {
-    const profSnap = await get(child(ref(db), `profiles/${msg.uid}`));
-    if (profSnap.exists()) {
-      senderName = profSnap.val().username;
-      senderPfp = profSnap.val().photoURL;
-      localStorage.setItem(`username_${msg.uid}`, senderName);
-      localStorage.setItem(`profilepic_${msg.uid}`, senderPfp);
-    }
-  }
+  let senderPfp = localStorage.getItem(`profilepic_${msg.uid}`) || "https://via.placeholder.com/35";
 
   div.innerHTML = `
-    <img src="${senderPfp}" class="pfp" alt="">
+    <img src="${senderPfp}" class="pfp">
     <div class="msg-content">
       <span class="name">${senderName}</span>
       <span>${msg.text || ""}</span>
@@ -276,6 +262,7 @@ onChildAdded(chatRef, async snap => {
     img.src = msg.imageURL;
     div.querySelector(".msg-content").appendChild(img);
   }
+
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
@@ -285,18 +272,21 @@ async function sendMessage() {
   const text = msgInput.value.trim();
   const file = imgInput.files[0];
   if (!text && !file) return;
+
   let imageURL = null;
   if (file) {
-    const storageRef = sRef(storage, "images/" + Date.now() + "-" + file.name);
+    const storageRef = sRef(storage, `images/${Date.now()}-${file.name}`);
     await uploadBytes(storageRef, file);
     imageURL = await getDownloadURL(storageRef);
   }
+
   await push(chatRef, { uid, name: username, text, imageURL });
   msgInput.value = "";
   imgInput.value = "";
 }
+
 sendBtn.onclick = sendMessage;
-msgInput.addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
+msgInput.addEventListener("keydown", e => { if(e.key==="Enter") sendMessage(); });
 </script>
 </body>
 </html>
