@@ -21,28 +21,11 @@ body {
   left: 0;
   width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-end;
   padding: 10px 20px;
   background: #1e1e1e;
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
   z-index: 10;
-}
-.profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.profile img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #00bfff;
-}
-.profile span {
-  font-weight: bold;
-  cursor: pointer;
 }
 .logout-btn {
   background: #444;
@@ -113,33 +96,11 @@ button {
   cursor: pointer;
 }
 button:hover { background: #005fcc; }
-
-#editPanel {
-  display: none;
-  position: fixed;
-  top: 60px;
-  left: 20px;
-  background: #222;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-#editPanel input { margin: 5px 0; padding: 8px; border-radius: 6px; border: none; }
 </style>
 </head>
 <body>
   <div class="top-bar">
-    <div class="profile" id="profileBox">
-      <img id="profilePic" src="https://via.placeholder.com/40" alt="Profile">
-      <span id="usernameDisplay">Loading...</span>
-    </div>
     <button class="logout-btn" id="logoutBtn">Logout</button>
-  </div>
-
-  <div id="editPanel">
-    <input type="text" id="newUsername" placeholder="New username (min 5 letters)">
-    <input type="file" id="newProfilePic" accept="image/*">
-    <button id="saveProfile">Save</button>
   </div>
 
   <h2>Chatroom 💬</h2>
@@ -177,14 +138,6 @@ const chatBox = document.getElementById("chatBox");
 const msgInput = document.getElementById("msgInput");
 const imgInput = document.getElementById("imgInput");
 const sendBtn = document.getElementById("sendBtn");
-
-const usernameDisplay = document.getElementById("usernameDisplay");
-const profilePic = document.getElementById("profilePic");
-const profileBox = document.getElementById("profileBox");
-const editPanel = document.getElementById("editPanel");
-const newUsername = document.getElementById("newUsername");
-const newProfilePic = document.getElementById("newProfilePic");
-const saveProfile = document.getElementById("saveProfile");
 const logoutBtn = document.getElementById("logoutBtn");
 
 let username = "Anonymous", uid = null, profileURL = "https://via.placeholder.com/40";
@@ -216,38 +169,9 @@ onAuthStateChanged(auth, async user => {
   } else {
     await update(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
   }
-
-  usernameDisplay.textContent = username;
-  profilePic.src = profileURL;
 });
 
-profileBox.onclick = () => {
-  editPanel.style.display = editPanel.style.display === "block" ? "none" : "block";
-};
-
-saveProfile.onclick = async () => {
-  const newName = newUsername.value.trim();
-  const newFile = newProfilePic.files[0];
-  if (newName && newName.length < 5) return alert("Username must be at least 5 letters.");
-  let newPhotoURL = profileURL;
-
-  if (newFile) {
-    const storageRef = sRef(storage, `pfps/${uid}-${Date.now()}`);
-    await uploadBytes(storageRef, newFile);
-    newPhotoURL = await getDownloadURL(storageRef);
-  }
-  if (newName) username = newName;
-  profileURL = newPhotoURL;
-
-  await update(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
-  localStorage.setItem(`username_${uid}`, username);
-  localStorage.setItem(`profilepic_${uid}`, profileURL);
-  usernameDisplay.textContent = username;
-  profilePic.src = profileURL;
-  editPanel.style.display = "none";
-  alert("Profile updated!");
-};
-
+// Logout
 logoutBtn.onclick = () => signOut(auth).then(()=>window.location.href="index.html");
 
 // Display messages
