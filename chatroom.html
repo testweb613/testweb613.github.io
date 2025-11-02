@@ -41,7 +41,9 @@ body {
   object-fit: cover;
   border: 2px solid #00bfff;
 }
-.profile span { font-weight: bold; }
+.profile span {
+  font-weight: bold;
+}
 .logout-btn {
   background: #444;
   color: white;
@@ -79,10 +81,16 @@ h2 { margin-top: 70px; }
   border-radius: 50%;
   object-fit: cover;
 }
-.name { color: #00bfff; font-weight: bold; display: block; }
+.name {
+  font-weight: bold;
+  display: block;
+}
 .msg-content { flex: 1; }
-.msg-content img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
-
+.msg-content img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 5px;
+}
 .input-area {
   display: flex;
   width: 90%;
@@ -115,9 +123,8 @@ button:hover { background: #005fcc; }
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
-  z-index: 20;
 }
-#editPanel input { margin: 5px 0; padding: 8px; border-radius: 6px; border: none; width: 200px; }
+#editPanel input { margin: 5px 0; padding: 8px; border-radius: 6px; border: none; }
 </style>
 </head>
 <body>
@@ -147,7 +154,7 @@ button:hover { background: #005fcc; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, onChildAdded, get, child, push, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onChildAdded, get, child, push, set, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -180,61 +187,83 @@ const newProfilePic = document.getElementById("newProfilePic");
 const saveProfile = document.getElementById("saveProfile");
 const logoutBtn = document.getElementById("logoutBtn");
 
-let username = "Anonymous", uid = null, profileURL = "https://via.placeholder.com/40";
+let username = "Anonymous", uid = null, profileURL = "https://via.placeholder.com/40", color = "#00bfff";
 
-// Auth listener
+// Utility: generate deterministic color from UID
+function uidToColor(uid) {
+  let hash = 0;
+  for (let i = 0; i < uid.length; i++) hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+  const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+  return "#" + "00000".substring(0, 6 - c.length) + c;
+}
+
+// Listen for auth
 onAuthStateChanged(auth, async user => {
-  if (!user) return window.location.href = "index.html";
+  if (!user) return (window.location.href = "index.html");
   uid = user.uid;
 
-  // Load profile from DB
+  // Try local storage first
+  const localName = localStorage.getItem(`username_${uid}`);
+  const localPic = localStorage.getItem(`profilepic_${uid}`);
+  const localColor = localStorage.getItem(`color_${uid}`);
+  if (localName) username = localName;
+  if (localPic) profileURL = localPic;
+  if (localColor) color = localColor;
+
+  // Fetch or create profile in DB
   const snap = await get(child(ref(db), `profiles/${uid}`));
   if (snap.exists()) {
     const data = snap.val();
-    username = data.username || username;
-    profileURL = data.photoURL || profileURL;
+    if (data.username) username = data.username;
+    if (data.photoURL) profileURL = data.photoURL;
+    if (data.color) color = data.color;
   } else {
-    await update(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
+    color = uidToColor(uid);
+    await set(ref(db, `profiles/${uid}`), { username, photoURL: profileURL, color });
   }
 
   localStorage.setItem(`username_${uid}`, username);
   localStorage.setItem(`profilepic_${uid}`, profileURL);
+  localStorage.setItem(`color_${uid}`, color);
 
   usernameDisplay.textContent = username;
   profilePic.src = profileURL;
+  profileDisplayColor();
+  console.log("Logged in as:", username);
 });
+
+// Apply username color
+function profileDisplayColor() {
+  usernameDisplay.style.color = color;
+}
 
 // Toggle edit panel
 profileBox.onclick = () => {
   editPanel.style.display = editPanel.style.display === "block" ? "none" : "block";
 };
 
-// Save profile changes
+// Save username and profile picture
 saveProfile.onclick = async () => {
   const newName = newUsername.value.trim();
-  if (newName && newName.length < 5) return alert("Username must be 5+ letters.");
-
+  const newFile = newProfilePic.files[0];
+  if (newName && newName.length < 5) return alert("Username must be at least 5 letters.");
   let newPhotoURL = profileURL;
-  const file = newProfilePic.files[0];
-  if (file) {
+
+  if (newFile) {
     const storageRef = sRef(storage, `pfps/${uid}-${Date.now()}`);
-    await uploadBytes(storageRef, file);
+    await uploadBytes(storageRef, newFile);
     newPhotoURL = await getDownloadURL(storageRef);
   }
-
   if (newName) username = newName;
   profileURL = newPhotoURL;
 
   await update(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
   localStorage.setItem(`username_${uid}`, username);
   localStorage.setItem(`profilepic_${uid}`, profileURL);
-
   usernameDisplay.textContent = username;
   profilePic.src = profileURL;
-
+  profileDisplayColor();
   editPanel.style.display = "none";
-  newUsername.value = "";
-  newProfilePic.value = "";
   alert("Profile updated!");
 };
 
@@ -247,16 +276,31 @@ onChildAdded(chatRef, async snap => {
   const div = document.createElement("div");
   div.className = "message";
 
-  let senderName = localStorage.getItem(`username_${msg.uid}`) || msg.name;
+  // Fetch sender profile
   let senderPfp = localStorage.getItem(`profilepic_${msg.uid}`) || "https://via.placeholder.com/35";
+  let senderName = localStorage.getItem(`username_${msg.uid}`) || msg.name;
+  let senderColor = localStorage.getItem(`color_${msg.uid}`) || uidToColor(msg.uid);
+
+  if (!senderName || senderName === "Anonymous") {
+    const profSnap = await get(child(ref(db), `profiles/${msg.uid}`));
+    if (profSnap.exists()) {
+      senderName = profSnap.val().username;
+      senderPfp = profSnap.val().photoURL;
+      senderColor = profSnap.val().color || uidToColor(msg.uid);
+      localStorage.setItem(`username_${msg.uid}`, senderName);
+      localStorage.setItem(`profilepic_${msg.uid}`, senderPfp);
+      localStorage.setItem(`color_${msg.uid}`, senderColor);
+    }
+  }
 
   div.innerHTML = `
-    <img src="${senderPfp}" class="pfp">
+    <img src="${senderPfp}" class="pfp" alt="">
     <div class="msg-content">
-      <span class="name">${senderName}</span>
+      <span class="name" style="color:${senderColor}">${senderName}</span>
       <span>${msg.text || ""}</span>
     </div>
   `;
+
   if (msg.imageURL) {
     const img = document.createElement("img");
     img.src = msg.imageURL;
@@ -272,10 +316,10 @@ async function sendMessage() {
   const text = msgInput.value.trim();
   const file = imgInput.files[0];
   if (!text && !file) return;
-
   let imageURL = null;
+
   if (file) {
-    const storageRef = sRef(storage, `images/${Date.now()}-${file.name}`);
+    const storageRef = sRef(storage, "images/" + Date.now() + "-" + file.name);
     await uploadBytes(storageRef, file);
     imageURL = await getDownloadURL(storageRef);
   }
@@ -286,7 +330,7 @@ async function sendMessage() {
 }
 
 sendBtn.onclick = sendMessage;
-msgInput.addEventListener("keydown", e => { if(e.key==="Enter") sendMessage(); });
+msgInput.addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
 </script>
 </body>
 </html>
