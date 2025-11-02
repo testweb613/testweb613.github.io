@@ -15,9 +15,7 @@
       height: 100vh;
       margin: 0;
     }
-    h2 {
-      margin-top: 15px;
-    }
+    h2 { margin-top: 15px; }
     .chat-box {
       flex: 1;
       width: 90%;
@@ -70,19 +68,9 @@
     button:hover {
       background: #005fcc;
     }
-    #logoutBtn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: #ff4747;
-    }
-    #logoutBtn:hover {
-      background: #cc3333;
-    }
   </style>
 </head>
 <body>
-  <button id="logoutBtn">Log out</button>
   <h2>Chatroom with Images 💬🖼️</h2>
   <div class="chat-box" id="chatBox"></div>
 
@@ -95,11 +83,27 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+    import { 
+      getAuth, 
+      onAuthStateChanged, 
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { 
+      getDatabase, 
+      ref, 
+      push, 
+      onChildAdded, 
+      get, 
+      child 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+    import { 
+      getStorage, 
+      ref as sRef, 
+      uploadBytes, 
+      getDownloadURL 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-    // 🔥 Your Firebase configuration (same as index.html)
+    // 🔥 Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
       authDomain: "testweb-afd53.firebaseapp.com",
@@ -122,21 +126,40 @@
     const msgInput = document.getElementById("msgInput");
     const imgInput = document.getElementById("imgInput");
     const sendBtn = document.getElementById("sendBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
 
     let username = "Anonymous";
+    let uid = null;
 
-    // 🚧 Check if user is signed in
-    onAuthStateChanged(auth, (user) => {
+    // Wait for user auth
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // Not logged in → back to sign-in page
+        alert("You're not signed in. Redirecting...");
         window.location.href = "index.html";
         return;
       }
-      username = user.isAnonymous ? "Guest" : (user.email || "User");
+
+      uid = user.uid;
+
+      // 🔹 Try to get username from localStorage first
+      const localUsername = localStorage.getItem(`username_${uid}`);
+      if (localUsername) {
+        username = localUsername;
+      } else {
+        // 🔹 Otherwise, fetch from Firebase
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, `usernames/${uid}`));
+        if (snapshot.exists()) {
+          username = snapshot.val();
+          localStorage.setItem(`username_${uid}`, username);
+        } else {
+          username = "Anonymous";
+        }
+      }
+
+      console.log("Logged in as:", username);
     });
 
-    // 📨 Display messages in real-time
+    // Display new messages
     onChildAdded(chatRef, (data) => {
       const msg = data.val();
       const div = document.createElement("div");
@@ -151,7 +174,7 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    // 🖼️ Send text or image message
+    // Send text or image
     async function sendMessage() {
       const text = msgInput.value.trim();
       const file = imgInput.files[0];
@@ -164,7 +187,7 @@
         imageURL = await getDownloadURL(storageRef);
       }
 
-      await push(chatRef, {
+      push(chatRef, {
         name: username,
         text: text || "",
         imageURL: imageURL || null
@@ -175,14 +198,8 @@
     }
 
     sendBtn.addEventListener("click", sendMessage);
-    msgInput.addEventListener("keydown", (e) => {
+    msgInput.addEventListener("keydown", e => {
       if (e.key === "Enter") sendMessage();
-    });
-
-    // 🚪 Logout button
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "index.html";
     });
   </script>
 </body>
