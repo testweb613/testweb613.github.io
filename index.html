@@ -1,96 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatroom with Images 💬🖼️</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign in — Retro Cloud</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+    :root{
+      --bg:#0f0f12;
+      --hero:#0c1a26;
+      --accent:#8bd3ff;
+      --muted:#9aa6b2;
+      --card:#0f1720;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
     }
-    h2 {
-      margin-top: 15px;
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+    body{
+      background: linear-gradient(180deg, #071122 0%, #0c0d10 100%);
+      color:#e6eef7;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
     }
-    .chat-box {
-      flex: 1;
-      width: 90%;
-      max-width: 500px;
-      border: 2px solid #333;
-      border-radius: 10px;
-      padding: 10px;
-      overflow-y: auto;
-      background: #1e1e1e;
-      margin-top: 10px;
+
+    /* Container */
+    .wrap{
+      width:100%;
+      max-width:1100px;
+      height:80vh;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:28px;
+      align-items:center;
     }
-    .message {
-      background: #2a2a2a;
-      padding: 8px 12px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      word-wrap: break-word;
+
+    /* Left hero */
+    .hero{
+      background:
+        radial-gradient(600px 200px at 10% 20%, rgba(139,211,255,0.06), transparent 10%),
+        linear-gradient(135deg, rgba(139,211,255,0.02) 0%, rgba(255,255,255,0.00) 60%),
+        var(--hero);
+      border-radius:var(--radius);
+      padding:48px;
+      box-shadow: 0 10px 30px rgba(2,6,12,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
     }
-    .message img {
-      max-width: 100%;
-      border-radius: 10px;
-      margin-top: 5px;
+    .hero h1{
+      font-family: "Playfair Display", serif;
+      font-size:54px;
+      margin:0 0 12px 0;
+      line-height:1;
+      letter-spacing:-0.02em;
+      color: #fff;
     }
-    .message .name {
-      font-weight: bold;
-      color: #00bfff;
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      font-size:18px;
+      max-width:55ch;
     }
-    .input-area {
-      display: flex;
-      width: 90%;
-      max-width: 500px;
-      margin: 10px 0;
-      gap: 5px;
+    .hero .tag{
+      display:inline-block;
+      margin-top:20px;
+      padding:8px 14px;
+      background:rgba(139,211,255,0.06);
+      color:var(--accent);
+      border-radius:999px;
+      font-weight:600;
+      font-size:13px;
+      box-shadow: 0 6px 18px rgba(11,23,34,0.6);
     }
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
+
+    /* Right card (login) */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--radius);
+      padding:28px;
+      box-shadow: 0 12px 34px rgba(1,5,10,0.7);
+      border: 1px solid rgba(255,255,255,0.03);
+      min-height:320px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
     }
-    button {
-      background: #0078ff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 15px;
-      cursor: pointer;
+    .card h2{
+      margin:0 0 6px 0;
+      font-size:20px;
+      color:#fff;
+      font-weight:700;
     }
-    button:hover {
-      background: #005fcc;
+    .card p.lead{
+      margin:0 0 18px 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    form { display:flex; flex-direction:column; gap:12px; }
+    label { font-size:13px; color:var(--muted); font-weight:600; letter-spacing:0.01em; }
+    .field {
+      display:flex; flex-direction:column; gap:6px;
+    }
+    input[type="email"], input[type="password"]{
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,0.03);
+      padding:12px 14px;
+      border-radius:10px;
+      color: #eaf6ff;
+      outline:none;
+      font-size:15px;
+    }
+    input::placeholder { color: rgba(230,238,247,0.25); }
+    .controls { display:flex; gap:10px; align-items:center; margin-top:6px; }
+
+    button.primary{
+      background: linear-gradient(90deg,var(--accent), #6ed0ff);
+      color:#022331;
+      border:none;
+      padding:12px 14px;
+      border-radius:10px;
+      font-weight:700;
+      cursor:pointer;
+      font-size:15px;
+      box-shadow: 0 8px 18px rgba(34,102,130,0.12);
+    }
+    button.ghost{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,0.03);
+      padding:10px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .sep{
+      display:flex; align-items:center; gap:12px; font-size:12px; color:var(--muted);
+      margin:10px 0;
+    }
+    .sep::before, .sep::after {
+      content:"";
+      height:1px; flex:1; background: linear-gradient(90deg,rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+    }
+    .tiny { font-size:12px; color:var(--muted); }
+
+    .footer-hint { margin-top:12px; color:rgba(230,238,247,0.18); font-size:12px; }
+
+    /* Responsive */
+    @media (max-width:900px){
+      .wrap{ grid-template-columns: 1fr; height:auto; padding-bottom:28px; gap:18px; }
+      .hero{ order:2; padding:28px; }
+      .card{ order:1; }
+      body{ padding:18px; }
+      .hero h1{ font-size:36px; }
     }
   </style>
 </head>
 <body>
-  <h2>Chatroom with Images 💬🖼️</h2>
-  <div class="chat-box" id="chatBox"></div>
+  <main class="wrap" role="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <span class="tag">community • journals • moments</span>
+      <h1 id="hero-title">A quiet place to share your thoughts</h1>
+      <p>Start writing, follow interesting people, and build a small corner of the web that's yours. Join the conversation — private, simple, sincere.</p>
+    </section>
 
-  <div class="input-area">
-    <input type="text" id="msgInput" placeholder="Type a message..." />
-    <input type="file" id="imgInput" accept="image/*" />
-    <button onclick="sendMessage()">Send</button>
-  </div>
+    <aside class="card" aria-labelledby="signin-title">
+      <h2 id="signin-title">Sign in to your account</h2>
+      <p class="lead">Enter your email or continue with Google.</p>
 
-  <!-- Firebase -->
+      <form id="authForm" onsubmit="return false;">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" required />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="••••••••" required />
+        </div>
+
+        <div class="controls">
+          <button class="primary" id="signBtn">Sign in</button>
+          <button class="ghost" id="toggleMode" type="button">Create account</button>
+        </div>
+
+        <div class="sep">or continue with</div>
+
+        <div style="display:flex; gap:8px;">
+          <button id="googleBtn" class="ghost" type="button" aria-label="Sign in with Google">Sign in with Google</button>
+          <button id="guestBtn" class="ghost" type="button">Continue as guest</button>
+        </div>
+
+        <p class="footer-hint tiny">By signing in you accept the terms and small print. This is a demo page — change copy freely.</p>
+      </form>
+    </aside>
+  </main>
+
+  <!-- Firebase auth (optional) -->
   <script type="module">
+    // ---- CONFIGURE FIREBASE BELOW ----
+    // If you don't want Firebase, you can remove everything inside this <script> and wire your own auth.
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      signInAnonymously,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    // 🔥 Your Firebase configuration
+    // Replace the config below with your Firebase project's config
     const firebaseConfig = {
-      apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
+     apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
   authDomain: "testweb-afd53.firebaseapp.com",
   databaseURL: "https://testweb-afd53-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "testweb-afd53",
@@ -100,63 +228,102 @@
   measurementId: "G-G474LLKB0T"
     };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const storage = getStorage(app);
-    const chatRef = ref(db, "messages");
+    // If the user hasn't replaced the config, we still allow a graceful fallback.
+    const isFirebaseConfigured = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
 
-    const chatBox = document.getElementById("chatBox");
-    const msgInput = document.getElementById("msgInput");
-    const imgInput = document.getElementById("imgInput");
-
-    let username = prompt("Enter your name:") || "Anonymous";
-
-    // Display new messages
-    onChildAdded(chatRef, (data) => {
-      const msg = data.val();
-      const div = document.createElement("div");
-      div.className = "message";
-      div.innerHTML = `<span class="name">${msg.name}:</span> ${msg.text || ""}`;
-      if (msg.imageURL) {
-        const img = document.createElement("img");
-        img.src = msg.imageURL;
-        div.appendChild(img);
-      }
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    // Send text or image
-    async function sendMessage() {
-      const text = msgInput.value.trim();
-      const file = imgInput.files[0];
-
-      if (!text && !file) return;
-
-      let imageURL = null;
-
-      // Upload image if present
-      if (file) {
-        const storageRef = sRef(storage, "images/" + Date.now() + "-" + file.name);
-        await uploadBytes(storageRef, file);
-        imageURL = await getDownloadURL(storageRef);
-      }
-
-      // Push message to Firebase
-      push(chatRef, {
-        name: username,
-        text: text || "",
-        imageURL: imageURL || null
-      });
-
-      msgInput.value = "";
-      imgInput.value = "";
+    if (!isFirebaseConfigured) {
+      console.warn("Firebase not configured — page will show dummy interactions. Replace firebaseConfig with your project's settings to enable real auth.");
     }
 
-    msgInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") sendMessage();
+    // DOM refs
+    const signBtn = document.getElementById('signBtn');
+    const toggleMode = document.getElementById('toggleMode');
+    const googleBtn = document.getElementById('googleBtn');
+    const guestBtn = document.getElementById('guestBtn');
+    const emailInput = document.getElementById('email');
+    const pwdInput = document.getElementById('password');
+
+    let creating = false; // toggle between sign-in and create account
+
+    toggleMode.addEventListener('click', () => {
+      creating = !creating;
+      toggleMode.textContent = creating ? 'Back to sign in' : 'Create account';
+      signBtn.textContent = creating ? 'Create account' : 'Sign in';
     });
+
+    if (isFirebaseConfigured) {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+
+      // Email/password sign-in or sign-up
+      signBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        const pwd = pwdInput.value;
+        if (!email || !pwd) return alert('Please enter email and password.');
+
+        try {
+          if (creating) {
+            await createUserWithEmailAndPassword(auth, email, pwd);
+          } else {
+            await signInWithEmailAndPassword(auth, email, pwd);
+          }
+        } catch (err) {
+          alert(err.message || 'Authentication failed.');
+          console.error(err);
+        }
+      });
+
+      // Google sign-in popup
+      googleBtn.addEventListener('click', async () => {
+        try {
+          await signInWithPopup(auth, provider);
+        } catch (err) {
+          alert(err.message || 'Google sign-in failed.');
+          console.error(err);
+        }
+      });
+
+      // Anonymous guest
+      guestBtn.addEventListener('click', async () => {
+        try {
+          await signInAnonymously(auth);
+        } catch (err) {
+          alert(err.message || 'Guest sign-in failed.');
+          console.error(err);
+        }
+      });
+
+      // Handle auth state changes (basic demo behavior)
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          document.querySelector('.card').innerHTML = `
+            <h2>Welcome${user.isAnonymous ? ' (Guest)' : ''}</h2>
+            <p class="lead">You're signed in as <strong>${user.email || 'anonymous'}</strong>.</p>
+            <p class="tiny">UID: ${user.uid}</p>
+            <p class="footer-hint tiny">This demo does not redirect automatically. Close the tab or add a redirect after sign-in in your app.</p>
+          `;
+        }
+      });
+    } else {
+      // Dummy behavior if Firebase not configured
+      signBtn.addEventListener('click', () => {
+        const email = emailInput.value.trim();
+        if (!email) return alert('Enter an email (demo).');
+        document.querySelector('.card').innerHTML = `
+          <h2>Demo sign-in</h2>
+          <p class="lead">Pretend sign-in for <strong>${email}</strong></p>
+          <p class="tiny">Install Firebase config to enable real authentication.</p>
+        `;
+      });
+      googleBtn.addEventListener('click', () => alert('Google sign-in disabled — add Firebase config.'));
+      guestBtn.addEventListener('click', () => {
+        document.querySelector('.card').innerHTML = `
+          <h2>Guest mode</h2>
+          <p class="lead">You're browsing as a guest.</p>
+        `;
+      });
+    }
   </script>
 </body>
 </html>
