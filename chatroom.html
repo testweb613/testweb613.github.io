@@ -57,6 +57,7 @@ h2 { margin-top: 70px; }
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  position: relative;
 }
 .message img.pfp {
   width: 35px;
@@ -96,6 +97,28 @@ button {
   cursor: pointer;
 }
 button:hover { background: #005fcc; }
+
+.admin-panel {
+  display: none;
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  width: 200px;
+  background: #222;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  z-index: 20;
+}
+.admin-panel h3 {
+  margin-top: 0;
+  font-size: 16px;
+  text-align: center;
+}
+.admin-panel button {
+  width: 100%;
+  margin: 5px 0;
+}
 </style>
 </head>
 <body>
@@ -112,10 +135,19 @@ button:hover { background: #005fcc; }
     <button id="sendBtn">Send</button>
   </div>
 
+  <!-- Admin Panel -->
+  <div class="admin-panel" id="adminPanel">
+    <h3>Admin Panel</h3>
+    <input type="text" id="kickUser" placeholder="User UID to kick">
+    <button id="kickBtn">Kick User</button>
+    <input type="text" id="deleteMsg" placeholder="Message key to delete">
+    <button id="deleteBtn">Delete Message</button>
+  </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, onChildAdded, get, child, push, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onChildAdded, get, child, push, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -140,9 +172,15 @@ const imgInput = document.getElementById("imgInput");
 const sendBtn = document.getElementById("sendBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
+const adminPanel = document.getElementById("adminPanel");
+const kickUser = document.getElementById("kickUser");
+const kickBtn = document.getElementById("kickBtn");
+const deleteMsg = document.getElementById("deleteMsg");
+const deleteBtn = document.getElementById("deleteBtn");
+
 let username = "Anonymous", uid = null, profileURL = "https://via.placeholder.com/40";
 
-// Generate random color per UID
+// Random color for names
 function getNameColor(id) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
@@ -150,24 +188,18 @@ function getNameColor(id) {
   return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
-// Listen for auth
-onAuthStateChanged(auth, async user => {
-  if (!user) return (window.location.href = "index.html");
-  uid = user.uid;
-  const localName = localStorage.getItem(`username_${uid}`);
-  const localPic = localStorage.getItem(`profilepic_${uid}`);
-  if (localName) username = localName;
-  if (localPic) profileURL = localPic;
+// List of admin emails or usernames
+const adminAccounts = ["admin@adminserver.at", "adminaccount12"];
 
-  const snap = await get(child(ref(db), `profiles/${uid}`));
-  if (snap.exists()) {
-    const data = snap.val();
-    if (data.username) username = data.username;
-    if (data.photoURL) profileURL = data.photoURL;
-    localStorage.setItem(`username_${uid}`, username);
-    localStorage.setItem(`profilepic_${uid}`, profileURL);
-  } else {
-    await update(ref(db, `profiles/${uid}`), { username, photoURL: profileURL });
+// Auth listener
+onAuthStateChanged(auth, async user => {
+  if (!user) return window.location.href="index.html";
+  uid = user.uid;
+  username = user.displayName || "Anonymous";
+
+  // Show admin panel only for admins
+  if (adminAccounts.includes(user.email) || adminAccounts.includes(username)) {
+    adminPanel.style.display = "block";
   }
 });
 
@@ -179,9 +211,10 @@ onChildAdded(chatRef, async snap => {
   const msg = snap.val();
   const div = document.createElement("div");
   div.className = "message";
+  div.id = snap.key;
 
-  let senderPfp = localStorage.getItem(`profilepic_${msg.uid}`) || "https://via.placeholder.com/35";
-  let senderName = localStorage.getItem(`username_${msg.uid}`) || msg.name;
+  let senderPfp = msg.photoURL || "https://via.placeholder.com/35";
+  let senderName = msg.name || "Anonymous";
 
   div.innerHTML = `
     <img src="${senderPfp}" class="pfp" alt="">
@@ -206,26 +239,43 @@ async function sendMessage() {
   if (!text && !file) return;
 
   let imageURL = null;
-
   if (file) {
-    try {
-      const storageRef = sRef(storage, `images/${uid}-${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      imageURL = await getDownloadURL(storageRef);
-    } catch (err) {
-      console.error("Error uploading image:", err);
-      alert("Failed to upload image.");
-      return;
-    }
+    const storageRef = sRef(storage, `images/${uid}-${Date.now()}-${file.name}`);
+    await uploadBytes(storageRef, file);
+    imageURL = await getDownloadURL(storageRef);
   }
 
-  await push(chatRef, { uid, name: username, text: text || "", imageURL, timestamp: Date.now() });
+  await push(chatRef, { uid, name: username, photoURL: profileURL, text: text || "", imageURL, timestamp: Date.now() });
   msgInput.value = "";
   imgInput.value = "";
 }
 
 sendBtn.onclick = sendMessage;
-msgInput.addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
+msgInput.addEventListener("keydown", e => { if(e.key==="Enter") sendMessage(); });
+
+// Admin: Kick user (removes their messages locally)
+kickBtn.onclick = () => {
+  const userToKick = kickUser.value.trim();
+  if(!userToKick) return alert("Enter UID to kick.");
+  const messages = chatBox.querySelectorAll(".message");
+  messages.forEach(m => {
+    const nameSpan = m.querySelector(".name");
+    if(m.dataset.uid === userToKick || nameSpan.textContent===userToKick) {
+      m.remove();
+    }
+  });
+  alert(`User ${userToKick} kicked locally.`);
+}
+
+// Admin: Delete message by key
+deleteBtn.onclick = async () => {
+  const msgKey = deleteMsg.value.trim();
+  if(!msgKey) return alert("Enter message key.");
+  await remove(ref(db, `messages/${msgKey}`));
+  const elem = document.getElementById(msgKey);
+  if(elem) elem.remove();
+  alert("Message deleted.");
+}
 
 </script>
 </body>
