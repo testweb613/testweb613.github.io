@@ -5,119 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Chatroom 💬</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #121212;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-.top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  padding: 10px 20px;
-  background: #1e1e1e;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  z-index: 10;
-}
-.logout-btn {
-  background: #444;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
-  cursor: pointer;
-}
-.logout-btn:hover { background: #666; }
-
-h2 { margin-top: 70px; }
-.chat-box {
-  flex: 1;
-  width: 90%;
-  max-width: 500px;
-  border: 2px solid #333;
-  border-radius: 10px;
-  padding: 10px;
-  overflow-y: auto;
-  background: #1e1e1e;
-  margin-top: 10px;
-}
-.message {
-  background: #2a2a2a;
-  padding: 8px 12px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.message img.pfp {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.name {
-  font-weight: bold;
-  display: block;
-}
-.msg-content { flex: 1; }
-.msg-content img {
-  max-width: 100%;
-  border-radius: 8px;
-  margin-top: 5px;
-}
-.input-area {
-  display: flex;
-  width: 90%;
-  max-width: 500px;
-  margin: 10px 0;
-  gap: 5px;
-}
-input[type=text] {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-}
-button {
-  background: #0078ff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-button:hover { background: #005fcc; }
-
-.admin-panel {
-  display: none;
-  position: fixed;
-  top: 70px;
-  right: 20px;
-  width: 200px;
-  background: #222;
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-  z-index: 20;
-}
-.admin-panel h3 {
-  margin-top: 0;
-  font-size: 16px;
-  text-align: center;
-}
-.admin-panel button {
-  width: 100%;
-  margin: 5px 0;
-}
+body{font-family:Arial,sans-serif;background:#121212;color:white;display:flex;flex-direction:column;align-items:center;height:100vh;margin:0;}
+.top-bar{position:fixed;top:0;left:0;width:100%;display:flex;justify-content:flex-end;padding:10px 20px;background:#1e1e1e;box-shadow:0 2px 5px rgba(0,0,0,0.3);z-index:10;}
+.logout-btn{background:#444;color:white;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;}
+.logout-btn:hover{background:#666;}
+h2{margin-top:70px;}
+.chat-box{flex:1;width:90%;max-width:500px;border:2px solid #333;border-radius:10px;padding:10px;overflow-y:auto;background:#1e1e1e;margin-top:10px;}
+.message{background:#2a2a2a;padding:8px 12px;border-radius:10px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;}
+.message img.pfp{width:35px;height:35px;border-radius:50%;object-fit:cover;}
+.name{font-weight:bold;display:block;}
+.msg-content{flex:1;}
+.msg-content img{max-width:100%;border-radius:8px;margin-top:5px;}
+.input-area{display:flex;width:90%;max-width:500px;margin:10px 0;gap:5px;}
+input[type=text]{flex:1;padding:10px;border:none;border-radius:8px;}
+button{background:#0078ff;color:white;border:none;border-radius:8px;padding:10px 15px;cursor:pointer;}
+button:hover{background:#005fcc;}
+.admin-panel{display:none;position:fixed;top:70px;right:20px;width:200px;background:#222;border-radius:10px;padding:10px;box-shadow:0 0 10px rgba(0,0,0,0.5);z-index:20;}
+.admin-panel h3{margin-top:0;font-size:16px;text-align:center;}
+.admin-panel button{width:100%;margin:5px 0;}
 </style>
 </head>
 <body>
@@ -136,7 +41,7 @@ button:hover { background: #005fcc; }
 
   <div class="admin-panel" id="adminPanel">
     <h3>Admin Panel</h3>
-    <input type="text" id="kickUser" placeholder="User UID to kick">
+    <input type="text" id="kickUser" placeholder="Username to kick">
     <button id="kickBtn">Kick User</button>
     <input type="text" id="deleteMsg" placeholder="Message key to delete">
     <button id="deleteBtn">Delete Message</button>
@@ -145,7 +50,7 @@ button:hover { background: #005fcc; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, onChildAdded, get, child, push, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onChildAdded, get, child, push, remove, onValue, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -175,99 +80,91 @@ const kickBtn = document.getElementById("kickBtn");
 const deleteMsg = document.getElementById("deleteMsg");
 const deleteBtn = document.getElementById("deleteBtn");
 
-let username = "Anonymous", uid = null, profileURL = "https://via.placeholder.com/40";
+let username="Anonymous", uid=null, profileURL="https://via.placeholder.com/40";
 
-// Admins (use either email or UID)
-const adminAccounts = ["admin@adminserver.at"];
-const adminUIDs = ["YOUR_ADMIN_UID_HERE"]; // optional
+// admins
+const adminAccounts=["admin@adminserver.at"];
+const adminUIDs=["YOUR_ADMIN_UID_HERE"];
 
-function getNameColor(id) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-  return "#" + "00000".substring(0, 6 - c.length) + c;
-}
+function getNameColor(id){let hash=0;for(let i=0;i<id.length;i++)hash=id.charCodeAt(i)+((hash<<5)-hash);const c=(hash&0x00FFFFFF).toString(16).toUpperCase();return"#"+"00000".substring(0,6-c.length)+c;}
 
-onAuthStateChanged(auth, async user => {
-  if (!user) return window.location.href="index.html";
-  uid = user.uid;
+onAuthStateChanged(auth, async user=>{
+  if(!user)return window.location.href="index.html";
+  uid=user.uid;
+  const snap=await get(child(ref(db),`usernames/${uid}`));
+  username=snap.exists()?snap.val():(user.displayName||"Anonymous");
 
-  // load username from DB
-  const snap = await get(child(ref(db), `usernames/${uid}`));
-  username = snap.exists() ? snap.val() : (user.displayName || "Anonymous");
+  if(adminAccounts.includes(user.email)||adminUIDs.includes(uid)) adminPanel.style.display="block";
 
-  if (adminAccounts.includes(user.email) || adminUIDs.includes(uid)) {
-    adminPanel.style.display = "block";
-  }
+  // watch for being kicked
+  const kickRef=ref(db,`kicked/${username}`);
+  onValue(kickRef,snapshot=>{
+    if(snapshot.exists()){
+      alert("🚫 You have been kicked by an admin.");
+      signOut(auth).then(()=>window.location.href="index.html");
+    }
+  });
 });
 
-logoutBtn.onclick = () => signOut(auth).then(()=>window.location.href="index.html");
+logoutBtn.onclick=()=>signOut(auth).then(()=>window.location.href="index.html");
 
-onChildAdded(chatRef, async snap => {
-  const msg = snap.val();
-  const div = document.createElement("div");
-  div.className = "message";
-  div.id = snap.key;
-  div.dataset.uid = msg.uid;
-
-  div.innerHTML = `
-    <img src="${msg.photoURL || 'https://via.placeholder.com/35'}" class="pfp" alt="">
+onChildAdded(chatRef,snap=>{
+  const msg=snap.val();
+  const div=document.createElement("div");
+  div.className="message";
+  div.id=snap.key;
+  div.dataset.uid=msg.uid;
+  div.dataset.username=msg.name;
+  div.innerHTML=`
+    <img src="${msg.photoURL||'https://via.placeholder.com/35'}" class="pfp" alt="">
     <div class="msg-content">
-      <span class="name" style="color:${getNameColor(msg.uid)}">${msg.name || 'Anonymous'}</span>
-      <span>${msg.text || ""}</span>
+      <span class="name" style="color:${getNameColor(msg.uid)}">${msg.name||'Anonymous'}</span>
+      <span>${msg.text||""}</span>
     </div>`;
-  if (msg.imageURL) {
-    const img = document.createElement("img");
-    img.src = msg.imageURL;
+  if(msg.imageURL){
+    const img=document.createElement("img");
+    img.src=msg.imageURL;
     div.querySelector(".msg-content").appendChild(img);
   }
   chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
+  chatBox.scrollTop=chatBox.scrollHeight;
 });
 
-async function sendMessage() {
-  const text = msgInput.value.trim();
-  const file = imgInput.files[0];
-  if (!text && !file) return;
-
-  let imageURL = null;
-  if (file) {
-    const storageRef = sRef(storage, `images/${uid}-${Date.now()}-${file.name}`);
-    await uploadBytes(storageRef, file);
-    imageURL = await getDownloadURL(storageRef);
+async function sendMessage(){
+  const text=msgInput.value.trim();
+  const file=imgInput.files[0];
+  if(!text&&!file)return;
+  let imageURL=null;
+  if(file){
+    const storageRef=sRef(storage,`images/${uid}-${Date.now()}-${file.name}`);
+    await uploadBytes(storageRef,file);
+    imageURL=await getDownloadURL(storageRef);
   }
-
-  await push(chatRef, { uid, name: username, photoURL: profileURL, text: text || "", imageURL, timestamp: Date.now() });
-  msgInput.value = "";
-   imgInput.value = "";
+  await push(chatRef,{uid,name:username,photoURL:profileURL,text:text||"",imageURL,timestamp:Date.now()});
+  msgInput.value="";
+  imgInput.value="";
 }
 
-sendBtn.onclick = sendMessage;
-msgInput.addEventListener("keydown", e => { if(e.key==="Enter") sendMessage(); });
+sendBtn.onclick=sendMessage;
+msgInput.addEventListener("keydown",e=>{if(e.key==="Enter")sendMessage();});
 
-// Admin: Kick user (locally hides their messages)
-kickBtn.onclick = () => {
-  const userToKick = kickUser.value.trim();
-  if(!userToKick) return alert("Enter UID to kick.");
-  const messages = chatBox.querySelectorAll(".message");
-  messages.forEach(m => {
-    if(m.dataset.uid === userToKick) {
-      m.remove();
-    }
-  });
-  alert(`User ${userToKick} kicked locally.`);
+// admin kick by username
+kickBtn.onclick=async()=>{
+  const targetName=kickUser.value.trim();
+  if(!targetName)return alert("Enter a username to kick.");
+  await set(ref(db,`kicked/${targetName}`),true);
+  alert(`${targetName} has been kicked and disconnected.`);
 };
 
-// Admin: Delete message by key
-deleteBtn.onclick = async () => {
-  const msgKey = deleteMsg.value.trim();
-  if(!msgKey) return alert("Enter message key.");
-  await remove(ref(db, `messages/${msgKey}`));
-  const elem = document.getElementById(msgKey);
-  if(elem) elem.remove();
+// delete message
+deleteBtn.onclick=async()=>{
+  const msgKey=deleteMsg.value.trim();
+  if(!msgKey)return alert("Enter message key.");
+  await remove(ref(db,`messages/${msgKey}`));
+  const elem=document.getElementById(msgKey);
+  if(elem)elem.remove();
   alert("Message deleted.");
 };
 </script>
 </body>
 </html>
-
