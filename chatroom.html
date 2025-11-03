@@ -96,12 +96,15 @@ onAuthStateChanged(auth, async user=>{
 
   if(adminAccounts.includes(user.email)||adminUIDs.includes(uid)) adminPanel.style.display="block";
 
-  // watch for being kicked
+  // watch for being kicked (only once)
   const kickRef=ref(db,`kicked/${username}`);
-  onValue(kickRef,snapshot=>{
+  onValue(kickRef, async snapshot=>{
     if(snapshot.exists()){
       alert("🚫 You have been kicked by an admin.");
-      signOut(auth).then(()=>window.location.href="index.html");
+      // Remove kick flag so they are not banned permanently
+      await remove(kickRef);
+      await signOut(auth);
+      window.location.href="index.html";
     }
   });
 });
@@ -148,12 +151,16 @@ async function sendMessage(){
 sendBtn.onclick=sendMessage;
 msgInput.addEventListener("keydown",e=>{if(e.key==="Enter")sendMessage();});
 
-// admin kick by username
+// admin kick by username (not permanent)
 kickBtn.onclick=async()=>{
   const targetName=kickUser.value.trim();
   if(!targetName)return alert("Enter a username to kick.");
-  await set(ref(db,`kicked/${targetName}`),true);
+  await set(ref(db,`kicked/${targetName}`),{
+    kickedAt: Date.now(),
+    by: username
+  });
   alert(`${targetName} has been kicked and disconnected.`);
+  kickUser.value="";
 };
 
 // delete message
@@ -164,6 +171,7 @@ deleteBtn.onclick=async()=>{
   const elem=document.getElementById(msgKey);
   if(elem)elem.remove();
   alert("Message deleted.");
+  deleteMsg.value="";
 };
 </script>
 </body>
