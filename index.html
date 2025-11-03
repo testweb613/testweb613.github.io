@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sign in — Retro Cloud</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#0f0f12;--hero:#0c1a26;--accent:#8bd3ff;--muted:#9aa6b2;--card:#0f1720;--glass:rgba(255,255,255,0.03);--radius:14px;}
@@ -66,13 +65,13 @@
     import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
-      authDomain: "testweb-afd53.firebaseapp.com",
-      databaseURL: "https://testweb-afd53-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "testweb-afd53",
-      storageBucket: "testweb-afd53.appspot.com",
-      messagingSenderId: "256254284539",
-      appId: "1:256254284539:web:2e3543191c27a36441165e"
+      apiKey:"AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
+      authDomain:"testweb-afd53.firebaseapp.com",
+      databaseURL:"https://testweb-afd53-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId:"testweb-afd53",
+      storageBucket:"testweb-afd53.appspot.com",
+      messagingSenderId:"256254284539",
+      appId:"1:256254284539:web:2e3543191c27a36441165e"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -137,7 +136,6 @@
         await set(ref(db, `usernames/${uid}`), username);
         localStorage.setItem(`username_${uid}`, username);
       }
-      // ✅ Wait before redirect
       setTimeout(() => (window.location.href = "chatroom.html"), 500);
     }
   </script>
