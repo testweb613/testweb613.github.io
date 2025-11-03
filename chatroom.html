@@ -57,7 +57,6 @@ h2 { margin-top: 70px; }
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  position: relative;
 }
 .message img.pfp {
   width: 35px;
@@ -135,7 +134,6 @@ button:hover { background: #005fcc; }
     <button id="sendBtn">Send</button>
   </div>
 
-  <!-- Admin Panel -->
   <div class="admin-panel" id="adminPanel">
     <h3>Admin Panel</h3>
     <input type="text" id="kickUser" placeholder="User UID to kick">
@@ -171,7 +169,6 @@ const msgInput = document.getElementById("msgInput");
 const imgInput = document.getElementById("imgInput");
 const sendBtn = document.getElementById("sendBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-
 const adminPanel = document.getElementById("adminPanel");
 const kickUser = document.getElementById("kickUser");
 const kickBtn = document.getElementById("kickBtn");
@@ -180,7 +177,10 @@ const deleteBtn = document.getElementById("deleteBtn");
 
 let username = "Anonymous", uid = null, profileURL = "https://via.placeholder.com/40";
 
-// Random color for names
+// Admins (use either email or UID)
+const adminAccounts = ["admin@adminserver.at"];
+const adminUIDs = ["YOUR_ADMIN_UID_HERE"]; // optional
+
 function getNameColor(id) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
@@ -188,41 +188,34 @@ function getNameColor(id) {
   return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
-// List of admin emails or usernames
-const adminAccounts = ["admin@adminserver.at", "adminaccount12"];
-
-// Auth listener
 onAuthStateChanged(auth, async user => {
   if (!user) return window.location.href="index.html";
   uid = user.uid;
-  username = user.displayName || "Anonymous";
 
-  // Show admin panel only for admins
-  if (adminAccounts.includes(user.email) || adminAccounts.includes(username)) {
+  // load username from DB
+  const snap = await get(child(ref(db), `usernames/${uid}`));
+  username = snap.exists() ? snap.val() : (user.displayName || "Anonymous");
+
+  if (adminAccounts.includes(user.email) || adminUIDs.includes(uid)) {
     adminPanel.style.display = "block";
   }
 });
 
-// Logout
 logoutBtn.onclick = () => signOut(auth).then(()=>window.location.href="index.html");
 
-// Display messages
 onChildAdded(chatRef, async snap => {
   const msg = snap.val();
   const div = document.createElement("div");
   div.className = "message";
   div.id = snap.key;
-
-  let senderPfp = msg.photoURL || "https://via.placeholder.com/35";
-  let senderName = msg.name || "Anonymous";
+  div.dataset.uid = msg.uid;
 
   div.innerHTML = `
-    <img src="${senderPfp}" class="pfp" alt="">
+    <img src="${msg.photoURL || 'https://via.placeholder.com/35'}" class="pfp" alt="">
     <div class="msg-content">
-      <span class="name" style="color:${getNameColor(msg.uid)}">${senderName}</span>
+      <span class="name" style="color:${getNameColor(msg.uid)}">${msg.name || 'Anonymous'}</span>
       <span>${msg.text || ""}</span>
-    </div>
-  `;
+    </div>`;
   if (msg.imageURL) {
     const img = document.createElement("img");
     img.src = msg.imageURL;
@@ -232,7 +225,6 @@ onChildAdded(chatRef, async snap => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-// Send messages
 async function sendMessage() {
   const text = msgInput.value.trim();
   const file = imgInput.files[0];
@@ -247,25 +239,24 @@ async function sendMessage() {
 
   await push(chatRef, { uid, name: username, photoURL: profileURL, text: text || "", imageURL, timestamp: Date.now() });
   msgInput.value = "";
-  imgInput.value = "";
+   imgInput.value = "";
 }
 
 sendBtn.onclick = sendMessage;
 msgInput.addEventListener("keydown", e => { if(e.key==="Enter") sendMessage(); });
 
-// Admin: Kick user (removes their messages locally)
+// Admin: Kick user (locally hides their messages)
 kickBtn.onclick = () => {
   const userToKick = kickUser.value.trim();
   if(!userToKick) return alert("Enter UID to kick.");
   const messages = chatBox.querySelectorAll(".message");
   messages.forEach(m => {
-    const nameSpan = m.querySelector(".name");
-    if(m.dataset.uid === userToKick || nameSpan.textContent===userToKick) {
+    if(m.dataset.uid === userToKick) {
       m.remove();
     }
   });
   alert(`User ${userToKick} kicked locally.`);
-}
+};
 
 // Admin: Delete message by key
 deleteBtn.onclick = async () => {
@@ -275,8 +266,8 @@ deleteBtn.onclick = async () => {
   const elem = document.getElementById(msgKey);
   if(elem) elem.remove();
   alert("Message deleted.");
-}
-
+};
 </script>
 </body>
 </html>
+
