@@ -3,230 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>YSA Chat</title>
+<title>YSA Chatroom</title>
 <style>
-:root {
-  --turf-blue: #3B9AE1;
-  --white: #ffffff;
-  --dark: #0f172a;
-  --light-dark: #1e293b;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: var(--dark);
-  color: var(--white);
-  height: 100vh;
-  display: grid;
-  grid-template-rows: 60px 1fr;
-  grid-template-columns: 200px 1fr 250px;
-  grid-template-areas:
-    "topbar topbar topbar"
-    "sidebar chat friends";
-}
-
-/* === Top Bar === */
-.topbar {
-  grid-area: topbar;
-  background-color: var(--turf-blue);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  color: var(--white);
-}
-
-.topbar .logo {
-  font-size: 1.4em;
-  font-weight: bold;
-}
-
-.topbar .search {
-  flex: 1;
-  margin: 0 20px;
-  position: relative;
-}
-
-.topbar input[type="text"] {
-  width: 100%;
-  padding: 8px 10px;
-  border: none;
-  border-radius: 6px;
-  outline: none;
-}
-
-.topbar .icons {
-  display: flex;
-  gap: 15px;
-  font-size: 1.3em;
-  cursor: pointer;
-}
-
-/* === Left Sidebar === */
-.sidebar {
-  grid-area: sidebar;
-  background-color: var(--light-dark);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 20px;
-  border-right: 2px solid var(--turf-blue);
-}
-
-.sidebar button {
-  width: 80%;
-  margin: 10px 0;
-  padding: 10px;
-  background-color: var(--turf-blue);
-  border: none;
-  border-radius: 8px;
-  color: var(--white);
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.sidebar button:hover {
-  background-color: #3587c5;
-}
-
-/* === Chat Area === */
-.chat {
-  grid-area: chat;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px;
-  background-color: var(--dark);
-}
-
-.chat-box {
-  width: 90%;
-  max-width: 600px;
-  flex: 1;
-  overflow-y: auto;
-  border-radius: 10px;
-  background: var(--light-dark);
-  padding: 10px;
-  border: 2px solid var(--turf-blue);
-}
-
-.message {
-  background-color: #22314b;
-  border-radius: 10px;
-  padding: 8px 12px;
-  margin: 8px 0;
-  display: flex;
-  gap: 10px;
-}
-
-.message img.pfp {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-}
-
-.msg-content {
-  flex: 1;
-}
-
-.msg-content img {
-  max-width: 100%;
-  border-radius: 8px;
-  margin-top: 5px;
-}
-
-.input-area {
-  width: 90%;
-  max-width: 600px;
-  display: flex;
-  gap: 5px;
-  margin-top: 10px;
-}
-
-.input-area input[type="text"] {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-}
-
-.input-area button {
-  background: var(--turf-blue);
-  border: none;
-  color: var(--white);
-  border-radius: 8px;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-
-.input-area button:hover {
-  background: #3587c5;
-}
-
-/* === Right Sidebar === */
-.friends {
-  grid-area: friends;
-  background-color: var(--light-dark);
-  border-left: 2px solid var(--turf-blue);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.friends h3 {
-  margin: 0 0 10px;
-  color: var(--turf-blue);
-  text-align: center;
-}
-
-.friend-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.friend {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 5px 0;
-}
-
-.friend .status {
-  width: 10px;
-  height: 10px;
-  background: #00ff55;
-  border-radius: 50%;
-}
-
-.trends {
-  border-top: 1px solid var(--turf-blue);
-  margin-top: 10px;
-  padding-top: 10px;
-}
+:root{--turf-blue:#3B9AE1;--white:#fff;--dark:#0f172a;--light-dark:#1e293b;}
+body{margin:0;font-family:Arial,sans-serif;background-color:var(--dark);color:var(--white);height:100vh;display:grid;grid-template-rows:60px 1fr;grid-template-columns:200px 1fr 250px;grid-template-areas:"topbar topbar topbar""sidebar chat friends";}
+.topbar{grid-area:topbar;background-color:var(--turf-blue);display:flex;align-items:center;justify-content:space-between;padding:0 20px;color:var(--white);}
+.topbar .logo{font-size:1.4em;font-weight:bold;}
+.sidebar{grid-area:sidebar;background-color:var(--light-dark);display:flex;flex-direction:column;align-items:center;padding-top:20px;border-right:2px solid var(--turf-blue);}
+.sidebar button{width:80%;margin:10px 0;padding:10px;background-color:var(--turf-blue);border:none;border-radius:8px;color:var(--white);cursor:pointer;font-weight:bold;}
+.sidebar button:hover{background-color:#3587c5;}
+.chat{grid-area:chat;display:flex;flex-direction:column;align-items:center;padding:10px;background-color:var(--dark);}
+.chat-box{width:90%;max-width:600px;flex:1;overflow-y:auto;border-radius:10px;background:var(--light-dark);padding:10px;border:2px solid var(--turf-blue);}
+.message{background-color:#22314b;border-radius:10px;padding:8px 12px;margin:8px 0;display:flex;gap:10px;}
+.message img.pfp{width:35px;height:35px;border-radius:50%;}
+.msg-content{flex:1;}
+.msg-content img{max-width:100%;border-radius:8px;margin-top:5px;}
+.input-area{width:90%;max-width:600px;display:flex;gap:5px;margin-top:10px;}
+.input-area input[type="text"]{flex:1;padding:10px;border:none;border-radius:8px;}
+.input-area button{background:var(--turf-blue);border:none;color:var(--white);border-radius:8px;padding:10px 15px;cursor:pointer;}
+.input-area button:hover{background:#3587c5;}
+.friends{grid-area:friends;background-color:var(--light-dark);border-left:2px solid var(--turf-blue);padding:20px;display:flex;flex-direction:column;}
+.friends h3{margin:0 0 10px;color:var(--turf-blue);text-align:center;}
+.friend-list{flex:1;overflow-y:auto;}
+.friend{display:flex;align-items:center;gap:10px;margin:5px 0;}
+.friend .status{width:10px;height:10px;background:#00ff55;border-radius:50%;}
+.trends{border-top:1px solid var(--turf-blue);margin-top:10px;padding-top:10px;}
 </style>
 </head>
 <body>
 
-<!-- === TOP BAR === -->
-<div class="topbar">
-  <div class="logo">YSA</div>
-  <div class="search">
-    <input type="text" placeholder="Search...">
-  </div>
-  <div class="icons">
-    🏠 🍔 📝 👤 ⚙️ ⋯
-  </div>
-</div>
+<div class="topbar"><div class="logo">YSA</div></div>
 
-<!-- === LEFT SIDEBAR === -->
 <div class="sidebar">
   <button>News</button>
   <button>Likes</button>
   <button>Saves</button>
 </div>
 
-<!-- === CHAT === -->
 <div class="chat">
   <div class="chat-box" id="chatBox"></div>
   <div class="input-area">
@@ -236,40 +49,17 @@ body {
   </div>
 </div>
 
-<!-- === FRIENDS SIDEBAR === -->
 <div class="friends">
   <h3>Friends Online</h3>
   <div class="friend-list" id="friendList"></div>
-  <div class="trends">
-    <h3>Trends</h3>
-    <p>— Coming soon —</p>
-  </div>
+  <div class="trends"><h3>Trends</h3><p>— Coming soon —</p></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  updateProfile 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { 
-  getDatabase, 
-  ref, 
-  onChildAdded, 
-  push, 
-  onValue, 
-  set, 
-  remove, 
-  serverTimestamp, 
-  get 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-import { 
-  getStorage, 
-  ref as sRef, 
-  uploadBytes, 
-  getDownloadURL 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getDatabase, ref, onChildAdded, push, set, remove, serverTimestamp, onValue, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
@@ -278,16 +68,13 @@ const firebaseConfig = {
   projectId:"testweb-afd53",
   storageBucket:"testweb-afd53.appspot.com",
   messagingSenderId:"256254284539",
-  appId:"1:256254284539:web:2e3543191c27a36441165e",
-  measurementId: "G-G474LLKB0T"
+  appId:"1:256254284539:web:2e3543191c27a36441165e"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const storage = getStorage(app);
-const chatRef = ref(db, "messages");
-const usersRef = ref(db, "onlineUsers");
 
 const chatBox = document.getElementById("chatBox");
 const msgInput = document.getElementById("msgInput");
@@ -295,103 +82,85 @@ const imgInput = document.getElementById("imgInput");
 const sendBtn = document.getElementById("sendBtn");
 const friendList = document.getElementById("friendList");
 
-let username = "Anonymous";
-let uid = null;
-let profileURL = "https://via.placeholder.com/40";
+let uid, username, profileURL = "https://via.placeholder.com/40";
 
-/* === AUTH STATE === */
 onAuthStateChanged(auth, async user => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-
+  if (!user) return window.location.href = "index.html";
   uid = user.uid;
 
-  // 1️⃣ Try to get username from database
-  const nameRef = ref(db, `users/${uid}/name`);
-  const nameSnap = await get(nameRef);
-  if (nameSnap.exists()) {
-    username = nameSnap.val();
-  } else if (user.displayName) {
-    username = user.displayName;
-  } else {
-    // 2️⃣ Ask user for name (first time)
-    username = prompt("Enter your display name:") || "User";
-    await updateProfile(user, { displayName: username });
-    await set(nameRef, username);
+  // Get locked username from Firebase or localStorage
+  const dbRef = ref(db);
+  const snap = await get(child(dbRef, `usernames/${uid}`));
+  if (snap.exists()) username = snap.val();
+  else {
+    alert("Username not found. Please login again.");
+    auth.signOut();
+    return window.location.href = "index.html";
   }
 
-  // 3️⃣ Mark user as online
+  // Set online
   const userRef = ref(db, `onlineUsers/${uid}`);
-  set(userRef, { name: username, online: true });
+  set(userRef, { name: username, online:true });
   window.addEventListener("beforeunload", () => remove(userRef));
+
+  // Load existing chat
+  const chatRef = ref(db, "messages");
+  onChildAdded(chatRef, snap => {
+    const msg = snap.val();
+    const div = document.createElement("div");
+    div.className = "message";
+    div.innerHTML = `<img src="${msg.photoURL||profileURL}" class="pfp">
+      <div class="msg-content"><b style="color:var(--turf-blue)">${msg.name}</b><br>${msg.text||""}</div>`;
+    if (msg.imageURL){
+      const img = document.createElement("img"); img.src = msg.imageURL;
+      div.querySelector(".msg-content").appendChild(img);
+    }
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+
+  // Show friends online
+  const usersRef = ref(db, "onlineUsers");
+  onValue(usersRef, snapshot => {
+    friendList.innerHTML = "";
+    snapshot.forEach(snap => {
+      const u = snap.val();
+      if (u.online){
+        const div = document.createElement("div");
+        div.className = "friend";
+        div.innerHTML = `<div class="status"></div><span>${u.name}</span>`;
+        friendList.appendChild(div);
+      }
+    });
+  });
 });
 
-/* === CHAT MESSAGES === */
-onChildAdded(chatRef, snap => {
-  const msg = snap.val();
-  const div = document.createElement("div");
-  div.className = "message";
-  div.innerHTML = `
-    <img src="${msg.photoURL || profileURL}" class="pfp" alt="">
-    <div class="msg-content">
-      <b style="color: var(--turf-blue)">${msg.name}</b><br>${msg.text || ""}
-    </div>`;
-  if (msg.imageURL) {
-    const img = document.createElement("img");
-    img.src = msg.imageURL;
-    div.querySelector(".msg-content").appendChild(img);
-  }
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
-
-/* === SEND MESSAGE === */
 sendBtn.onclick = sendMessage;
-msgInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") sendMessage();
-});
+msgInput.addEventListener("keydown", e=>{if(e.key==="Enter") sendMessage()});
 
-async function sendMessage() {
+async function sendMessage(){
   const text = msgInput.value.trim();
   const file = imgInput.files[0];
   if (!text && !file) return;
 
-  let imageURL = null;
-  if (file) {
+  let imageURL=null;
+  if(file){
     const storageRef = sRef(storage, `images/${uid}-${Date.now()}-${file.name}`);
-    await uploadBytes(storageRef, file);
+    await uploadBytes(storageRef,file);
     imageURL = await getDownloadURL(storageRef);
   }
 
-  await push(chatRef, {
+  await push(ref(db,"messages"),{
     uid,
     name: username,
     photoURL: profileURL,
-    text: text || "",
+    text: text||"",
     imageURL,
     timestamp: serverTimestamp()
   });
 
-  msgInput.value = "";
-  imgInput.value = "";
+  msgInput.value=""; imgInput.value="";
 }
-
-/* === SHOW FRIENDS ONLINE === */
-onValue(usersRef, snapshot => {
-  friendList.innerHTML = "";
-  snapshot.forEach(userSnap => {
-    const u = userSnap.val();
-    if (u.online) {
-      const div = document.createElement("div");
-      div.className = "friend";
-      div.innerHTML = `<div class="status"></div><span>${u.name}</span>`;
-      friendList.appendChild(div);
-    }
-  });
-});
 </script>
-
 </body>
 </html>
