@@ -248,9 +248,28 @@ body {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, onChildAdded, push, onValue, set, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  updateProfile 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { 
+  getDatabase, 
+  ref, 
+  onChildAdded, 
+  push, 
+  onValue, 
+  set, 
+  remove, 
+  serverTimestamp, 
+  get 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { 
+  getStorage, 
+  ref as sRef, 
+  uploadBytes, 
+  getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyCKfQ4vW-oR-CGJ0bpRd-wF-nsawLk8X8w",
@@ -280,22 +299,36 @@ let username = "Anonymous";
 let uid = null;
 let profileURL = "https://via.placeholder.com/40";
 
-/* === Auth state === */
-onAuthStateChanged(auth, user => {
+/* === AUTH STATE === */
+onAuthStateChanged(auth, async user => {
   if (!user) {
     window.location.href = "index.html";
     return;
   }
-  uid = user.uid;
-  username = user.displayName || "User";
 
-  // Mark user as online
+  uid = user.uid;
+
+  // 1️⃣ Try to get username from database
+  const nameRef = ref(db, `users/${uid}/name`);
+  const nameSnap = await get(nameRef);
+  if (nameSnap.exists()) {
+    username = nameSnap.val();
+  } else if (user.displayName) {
+    username = user.displayName;
+  } else {
+    // 2️⃣ Ask user for name (first time)
+    username = prompt("Enter your display name:") || "User";
+    await updateProfile(user, { displayName: username });
+    await set(nameRef, username);
+  }
+
+  // 3️⃣ Mark user as online
   const userRef = ref(db, `onlineUsers/${uid}`);
   set(userRef, { name: username, online: true });
   window.addEventListener("beforeunload", () => remove(userRef));
 });
 
-/* === Chat messages === */
+/* === CHAT MESSAGES === */
 onChildAdded(chatRef, snap => {
   const msg = snap.val();
   const div = document.createElement("div");
@@ -314,7 +347,7 @@ onChildAdded(chatRef, snap => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-/* === Send message === */
+/* === SEND MESSAGE === */
 sendBtn.onclick = sendMessage;
 msgInput.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
@@ -324,12 +357,14 @@ async function sendMessage() {
   const text = msgInput.value.trim();
   const file = imgInput.files[0];
   if (!text && !file) return;
+
   let imageURL = null;
   if (file) {
     const storageRef = sRef(storage, `images/${uid}-${Date.now()}-${file.name}`);
     await uploadBytes(storageRef, file);
     imageURL = await getDownloadURL(storageRef);
   }
+
   await push(chatRef, {
     uid,
     name: username,
@@ -338,11 +373,12 @@ async function sendMessage() {
     imageURL,
     timestamp: serverTimestamp()
   });
+
   msgInput.value = "";
   imgInput.value = "";
 }
 
-/* === Show friends online === */
+/* === SHOW FRIENDS ONLINE === */
 onValue(usersRef, snapshot => {
   friendList.innerHTML = "";
   snapshot.forEach(userSnap => {
@@ -356,5 +392,6 @@ onValue(usersRef, snapshot => {
   });
 });
 </script>
+
 </body>
 </html>
